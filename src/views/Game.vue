@@ -4,9 +4,17 @@
 <script>
 import Phaser from 'phaser'
 import wall from '../assets/wall.png'
+import coin from '../assets/coin.png'
 import ground from '../assets/ground.png'
 import player from '../assets/player.png'
 
+function takeCoin (player, coin) {
+  coin.disableBody(true, true)
+}
+
+function die (player, coin) {
+  coin.disableBody(true, true)
+}
 export default {
   name: 'Game',
   mounted () {
@@ -31,12 +39,13 @@ export default {
           console.log('PRELOAD')
           this.load.image('wall', wall)
           this.load.image('ground', ground)
+          this.load.image('coin', coin)
           this.load.spritesheet('player', player, { frameWidth: 28, frameHeight: 22 })
           // CARREGAR ASSETS -> IMAAGES, PLAYERS (SPRITESHEETS), AUDIOS
 
           // AUDIO
           // this.load.setBaseURL('http://labs.phaser.io')
-          this.dustSound = this.load.audio('dust', ['../assets/dust.wav', '../assets/dust.mp3'])
+          // this.dustSound = this.load.audio('dust', ['../assets/dust.wav', '../assets/dust.mp3'])
         },
         create () {
           console.log('CREATE')
@@ -56,11 +65,31 @@ export default {
           this.physics.add.collider(this.player, this.level)
           // this.add.audio(this.dustSound, 0.1)
 
+          // ADD COINS
+          this.coins = this.physics.add.group()
+
+          this.coins.create(140, 200 / 2, 'coin')
+          this.coins.create(170, 200 / 2, 'coin')
+          this.coins.create(200, 200 / 2, 'coin')
+
+          this.physics.add.collider(this.coins, this.level)
+          this.physics.add.overlap(this.coins, this.player, takeCoin, null, this)
           // cursors
 
           this.cursors = this.input.keyboard.createCursorKeys()
+
+          // ANIMATE PLAYER
+          this.anims.create({
+            key: 'idle',
+            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
+            frameRate: 5,
+            repeat: -1
+          })
         },
         update () {
+          console.log('uptade')
+          this.player.anims.play('idle', true)
+
           // ESTE EL QUE S'executa continuament al Game loop -> 60 vegades per segon o FPS
 
           // INPUT EVENTS
