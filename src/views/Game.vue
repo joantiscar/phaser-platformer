@@ -7,6 +7,8 @@ import wall from '../assets/wall.png'
 import coin from '../assets/coin.png'
 import ground from '../assets/ground.png'
 import player from '../assets/player.png'
+import dust from '../assets/dust.wav'
+import jump from '../assets/jump.wav'
 
 function takeCoin (player, coin) {
   coin.disableBody(true, true)
@@ -15,6 +17,15 @@ function takeCoin (player, coin) {
 function die (player, coin) {
   coin.disableBody(true, true)
 }
+
+function jumpPlayer (game) {
+  if (game.player.body.touching.down && game.player.body.velocity.y < 100) {
+    game.hasJumped = true
+    // game.sound.play('jump')
+    game.player.body.velocity.y = -220
+  }
+}
+
 export default {
   name: 'Game',
   mounted () {
@@ -29,7 +40,7 @@ export default {
         default: 'arcade',
         arcade: {
           gravity: {
-            y: 100
+            y: 600
           }
         }
       },
@@ -45,10 +56,15 @@ export default {
 
           // AUDIO
           // this.load.setBaseURL('http://labs.phaser.io')
-          // this.dustSound = this.load.audio('dust', ['../assets/dust.wav', '../assets/dust.mp3'])
+          this.dustSound = this.load.audio('dust', dust)
+          this.jumpSound = this.load.audio('jump', jump)
         },
         create () {
           console.log('CREATE')
+
+          this.debugSpeedY = this.add.text(16, 28, 'Y: ', { fontSize: '12px', fill: '#000' })
+          this.debugHasJumped = this.add.text(16, 16, 'jumped: ', { fontSize: '12px', fill: '#000' })
+          this.debugJumping = this.add.text(16, 0 , 'jumping: ', { fontSize: '12px', fill: '#000' })
           // INITIALIZE del nivell -> Afegirem tiles (level: pareds, terres), afegirem players, collectibles (coins)
           this.cameras.main.backgroundColor.setTo(69, 911, 420)
 
@@ -87,9 +103,11 @@ export default {
           })
         },
         update () {
-          console.log('uptade')
-          this.player.anims.play('idle', true)
+          this.debugSpeedY.setText('y: ' + this.player.body.velocity.y)
+          this.debugHasJumped.setText('jumped: ' + this.hasJumped)
+          this.debugJumping.setText('jumping: ' + this.jumping)
 
+          this.player.anims.play('idle', true)
           // ESTE EL QUE S'executa continuament al Game loop -> 60 vegades per segon o FPS
 
           // INPUT EVENTS
@@ -100,23 +118,29 @@ export default {
             this.player.setVelocityX(160)
             this.player.setFrame(1)
           } else {
-            if (this.player.body.velocity.x > 0) this.player.setVelocityX(this.player.body.velocity.x - 1)
-            if (this.player.body.velocity.x < 0) this.player.setVelocityX(this.player.body.velocity.x + 1)
+            if (this.player.body.velocity.x > 0) this.player.setVelocityX(this.player.body.velocity.x - 10)
+            if (this.player.body.velocity.x < 0) this.player.setVelocityX(this.player.body.velocity.x + 10)
+            if (this.player.body.velocity.x < 10 && this.player.body.velocity.x > -10) this.player.setVelocityX(0)
 
             this.player.setFrame(0)
           }
-          if (this.player.body.touching.down && this.cursors.up.isDown) {
-            this.player.setVelocityY(200)
+          if (this.cursors.up.isDown) {
+            jumpPlayer(this)
           }
-
-          if (this.player.body.touching.down && this.player.y > 10) {
-            // this.dustSound.play()
+          if (this.player.body.onFloor() && this.player.body.velocity.y ) {
+            if (this.hasJumped) {
+              console.log('astio')
+              this.sound.play('dust')
+              this.hasJumped = false
+            }
           }
         }
+
       }
+
     }
     // eslint-disable-next-line
-    new Phaser.Game(config)
+    this.game = new Phaser.Game(config)
   },
   methods: {}
 }
