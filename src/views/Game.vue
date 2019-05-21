@@ -18,10 +18,24 @@ function takeCoin (player, coin) {
   coin.disableBody(true, true)
   this.sound.play('coin')
 }
+function shake () {
+  this.cameras.main.shake(200)
+}
+function setParticles (x, y) {
 
+}
 function die (player, enemy) {
+  var particles = this.add.particles('dust')
+  this.dust = particles.createEmitter()
+  this.dust.setPosition(player.body.x, player.body.y)
+  this.dust.setSpeed(200)
+  this.dust.setBlendMode(Phaser.BlendModes.ADD)
+  this.time.delayedCall(400, function () {
+    particles.destroy()
+  })
   this.sound.play('dead')
   player.disableBody(true, true)
+  shake.call(this)
   respawn.call(this)
 }
 function respawn () {
@@ -74,7 +88,6 @@ export default {
       // NO HI HA STATES A 3.0 -> SCENES
       scene: {
         preload () {
-          console.log('PRELOAD')
           this.load.image('dust', dustImage)
           this.load.image('wall', wall)
           this.load.image('ground', ground)
@@ -91,10 +104,7 @@ export default {
           this.deadSound = this.load.audio('dead', dead)
         },
         create () {
-          this.debugSpeedY = this.add.text(16, 28, 'Y: ', { fontSize: '12px', fill: '#000' })
-          this.debugSpeedX = this.add.text(16, 40, 'X: ', { fontSize: '12px', fill: '#000' })
-          this.debugHasJumped = this.add.text(16, 16, 'jumped: ', { fontSize: '12px', fill: '#000' })
-          this.debugJumping = this.add.text(16, 0, 'jumping: ', { fontSize: '12px', fill: '#000' })
+          setParticles.call(this)
           // INITIALIZE del nivell -> Afegirem tiles (level: pareds, terres), afegirem players, collectibles (coins)
           this.cameras.main.backgroundColor.setTo(69, 911, 420)
           // ROUP PER DEFECTE ES DINAMIC
@@ -131,14 +141,10 @@ export default {
           })
           let particles = this.add.particles('dust')
           let emitter = particles.createEmitter()
-          emitter.start()
         },
         update () {
-          this.debugSpeedY.setText('y: ' + this.player.body.velocity.y)
-          this.debugSpeedX.setText('x: ' + this.player.body.velocity.x)
-          this.debugHasJumped.setText('jumped: ' + this.hasJumped)
-          this.debugJumping.setText('jumping: ' + this.jumping)
           this.player.anims.play('idle', true)
+
           // INPUT EVENTS
           if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160)
@@ -150,20 +156,11 @@ export default {
             if (this.player.body.velocity.x > 0) this.player.setVelocityX(this.player.body.velocity.x - 10)
             if (this.player.body.velocity.x < 0) this.player.setVelocityX(this.player.body.velocity.x + 10)
             if (this.player.body.velocity.x < 10 && this.player.body.velocity.x > -10) this.player.setVelocityX(0)
-            this.player.setFrame(0)
           }
-          if (this.player.body.velocity.x === 0) { this.player.anims.play('idle') }
 
           if (this.cursors.up.isDown) {
             jumpPlayer(this)
           }
-          // if (this.player.body.onFloor() && this.player.body.velocity.y ) {
-          //   if (this.hasJumped) {
-          //     console.log('astio')
-          //     this.sound.play('dust')
-          //     this.hasJumped = false
-          //   }
-          // }
         }
 
       }
